@@ -1,0 +1,29 @@
+# API anahtarlari - ASLA GitHub'a gitmemeli
+.env
+*.key
+# Is ortagi API anahtar ozetleri (src/api_guvenlik.py uretir)
+api_anahtarlari.json
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.ipynb_checkpoints/
+
+*.log
+
+
+models/
+
+data/trends_onbellek.json
+data/yerel.db
+*.db
+
+.streamlit/secrets.toml
+
+# Isletim sistemi
+.DS_Store
+Thumbs.db
+
+
