@@ -18,6 +18,7 @@ uyumlu, çok kanallı pazarlama içeriğine** (Instagram gönderisi + Shopier a�
   <img src="https://img.shields.io/badge/Scikit--learn-F7931E?style=flat-square&logo=scikitlearn&logoColor=white"/>
   <img src="https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white"/>
 </p>
+</p>
 > Geliştiren: **Tuğçe Deniz** · [LinkedIn](https://www.linkedin.com/in/tuğçe-deniz-869b5a310) · [GitHub](https://github.com/Tugce-hub)
  
 ---
