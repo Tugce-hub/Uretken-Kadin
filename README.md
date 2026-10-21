@@ -20,7 +20,6 @@ uyumlu, çok kanallı pazarlama içeriğine** (Instagram gönderisi + Shopier a�
 </p>
 </p>
 > ·[Canlı Linki](https://uretken-kadin.onrender.com)·
-
 > Geliştiren: **Tuğçe Deniz** · [LinkedIn](https://www.linkedin.com/in/tuğçe-deniz-869b5a310) · [GitHub](https://github.com/Tugce-hub)
  
 ---
