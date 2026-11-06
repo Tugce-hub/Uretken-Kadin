@@ -88,7 +88,7 @@ def hatasiz(at: AppTest) -> None:
 def test_arac_kutusu_gezinir_ve_giris_yapan_tanitimi_atlar():
     at = uygulama("araclar")
     hatasiz(at)
-    assert metinler(at).count('class="arac-karti') == 5     # içerik, görsel, satış, defter, pano
+    assert metinler(at).count('class="arac-karti') == 4     # içerik, görsel, satış, defter
     at.button(key="kutu_gorsel").click().run()
     assert at.session_state["ekran"] == "gorsel"
     at = uygulama("karsilama")
