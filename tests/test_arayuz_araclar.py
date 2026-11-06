@@ -108,19 +108,32 @@ def test_ziyaretci_tanitim_sayfasindan_kayda_gider():
     assert "önce giriş yapın" not in " ".join(i.value for i in at.info)   # doğrudan gelindi, yönlendirme değil
 
 
-def test_nasil_kullanilir_videosu_acilip_kapanir():
-    at = uygulama("karsilama", kullanici=None)
-    hatasiz(at)
-    assert any(b.key == "tanitim_video" for b in at.button)
-    at.button(key="tanitim_video").click().run()
-    hatasiz(at)
-    assert at.session_state["tanitim_video_acik"] and "CC" in metinler(at)
-    at.button(key="tanitim_video").click().run()
-    hatasiz(at)
-    assert not at.session_state["tanitim_video_acik"]
+def test_nasil_kullanilir_videosu_baglanti_varken_gorunur():
+    import video
+    eski = video.VIDEO_ADRESI
+    try:
+        video.VIDEO_ADRESI = ""                                   # bağlantı yokken düğme hiç çizilmez
+        at = uygulama("araclar")
+        hatasiz(at)
+        assert not any(b.key == "araclar_video" for b in at.button)
 
-    yardim = uygulama("yardim")                                   # yardım ekranında da var
-    assert any(b.key == "yardim_video" for b in yardim.button)
+        video.VIDEO_ADRESI = "https://www.youtube.com/watch?v=ornek"
+        at = uygulama("araclar")
+        hatasiz(at)
+        assert any(b.key == "araclar_video" for b in at.button)
+        at.button(key="araclar_video").click().run()
+        hatasiz(at)
+        assert at.session_state["araclar_video_acik"] and "CC" in metinler(at)
+        at.button(key="araclar_video").click().run()
+        assert not at.session_state["araclar_video_acik"]
+
+        yardim = uygulama("yardim")                               # yardım ekranında da var
+        assert any(b.key == "yardim_video" for b in yardim.button)
+
+        ziyaretci = uygulama("karsilama", kullanici=None)         # tanıtım sayfasında yok
+        assert not any(b.key.endswith("_video") for b in ziyaretci.button)
+    finally:
+        video.VIDEO_ADRESI = eski
 
 
 def test_ust_menude_araclar_dugmesi():
