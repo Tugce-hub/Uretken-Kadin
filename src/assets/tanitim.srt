@@ -1,0 +1,56 @@
+1
+00:00:04,600 --> 00:00:14,400
+Üretken Kadın: el emeğiyle üretim yapan
+kadınlar için pazarlama asistanı
+
+2
+00:00:14,600 --> 00:00:26,100
+Ücretsiz hesabınızla giriş yapın;
+içerikleriniz hesabınızda saklanır
+
+3
+00:00:26,300 --> 00:00:33,900
+Dört araç: içerik yaz, görsel stüdyosu,
+satış araçları ve panonuz
+
+4
+00:00:34,100 --> 00:00:39,500
+Ürününüzü kendi cümlelerinizle anlatın;
+isterseniz konuşarak da anlatabilirsiniz
+
+5
+00:00:39,700 --> 00:00:45,400
+Ürün türünü seçip 'İçeriğimi hazırla'
+düğmesine basın
+
+6
+00:00:45,600 --> 00:00:52,900
+Saniyeler içinde Instagram gönderiniz ve
+satış metniniz hazır
+
+7
+00:00:53,100 --> 00:01:00,400
+Kalite rozeti içeriğin yayına hazır olup
+olmadığını söyler; metni dilediğiniz gibi
+düzeltebilirsiniz
+
+8
+00:01:00,600 --> 00:01:05,500
+Satış araçlarında fiyatınızı hesaplayın:
+malzeme, ambalaj, kargo, komisyon
+
+9
+00:01:05,700 --> 00:01:11,1000
+Emeğinizin saati de hesaba katılır;
+önerilen fiyat ve saatlik kazancınız
+görünür
+
+10
+00:01:12,200 --> 00:01:16,1000
+Kooperatifler ve pazaryerleri için API;
+başvuru formu da burada
+
+11
+00:01:17,200 --> 00:01:21,170
+uretken-kadin.onrender.com · Emeğin
+dijital sesi

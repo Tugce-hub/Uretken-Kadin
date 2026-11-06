@@ -108,6 +108,21 @@ def test_ziyaretci_tanitim_sayfasindan_kayda_gider():
     assert "önce giriş yapın" not in " ".join(i.value for i in at.info)   # doğrudan gelindi, yönlendirme değil
 
 
+def test_nasil_kullanilir_videosu_acilip_kapanir():
+    at = uygulama("karsilama", kullanici=None)
+    hatasiz(at)
+    assert any(b.key == "tanitim_video" for b in at.button)
+    at.button(key="tanitim_video").click().run()
+    hatasiz(at)
+    assert at.session_state["tanitim_video_acik"] and "CC" in metinler(at)
+    at.button(key="tanitim_video").click().run()
+    hatasiz(at)
+    assert not at.session_state["tanitim_video_acik"]
+
+    yardim = uygulama("yardim")                                   # yardım ekranında da var
+    assert any(b.key == "yardim_video" for b in yardim.button)
+
+
 def test_ust_menude_araclar_dugmesi():
     at = uygulama("anlat")
     at.button(key="nav_araclar").click().run()

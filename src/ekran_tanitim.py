@@ -17,6 +17,7 @@ import streamlit as st
 import ekran_araclar
 import ekran_hesap
 import logo
+import video
 
 
 @dataclass
@@ -165,6 +166,8 @@ def tanitim_sayfasi(b: Baglam) -> None:
         '</p></div>', unsafe_allow_html=True)
     _cagri_dugmeleri(b, "tanitim_ust")
     st.markdown('<p class="kisa-not">Kart bilgisi istemez · Bir dakikada hesap</p>', unsafe_allow_html=True)
+    video.dugme("tanitim_video", "▶️ Önce nasıl kullanıldığını izleyin "
+                                 f"({video.SURE})")
 
     # Kimler için
     st.markdown('<div class="bolum-baslik">Kimler için?</div>'
