@@ -11,19 +11,34 @@ __pycache__/
 venv/
 .ipynb_checkpoints/
 
+# Not: ciktilar/ klasoru BILEREK gitignore'a alinmadi.
+# Toplu test sonuclari capstone kaniti; ekip arkadasinin kendi API kotasini
+# harcamadan gorebilmesi icin repoda tutuluyor.
 *.log
 
-
+# Egitilmis model ikilisi (surume duyarli; kalite_egit.py ile yeniden uretilir).
+# ciktilar/model/ altindaki metrik ve grafikler BILEREK tutulur (capstone kaniti).
 models/
 
+# Calisma-aninda uretilen Google Trends onbellegi
 data/trends_onbellek.json
+# Yerel hesap veritabani (kullanici e-postalari ve icerikleri) - ASLA repoya girmemeli
 data/yerel.db
 *.db
 
+# Streamlit secret'lari ASLA repoya girmemeli (config.toml girer, secrets.toml girmez)
 .streamlit/secrets.toml
 
 # Isletim sistemi
 .DS_Store
 Thumbs.db
 
+# Yerel gelistirme ayarlari (kodun parcasi degil)
+.claude/
 
+# Ekip ici ilerleme notu (kodun parcasi degil)
+ilerleme_baris.md
+
+# Sunum ve rapor dosyalari (proje klasorunde durur, depoya girmez)
+Uretken_Kadin_Sunum.pdf
+Uretken_Kadin_Uygulama_Yol_Haritasi.pdf
