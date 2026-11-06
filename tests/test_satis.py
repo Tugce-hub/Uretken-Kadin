@@ -96,33 +96,20 @@ def test_musteri_cevabi_sahte_istemci_ve_kurallar():
 
 
 # ---------------------------------------------------------------- pazaryeri
-def test_etiket_denetle_turkce_ve_ingilizce_iddialar():
+def test_etiket_denetle_turkce_iddialar():
     kalan, cikan = satis.etiket_denetle(
-        ["organic cotton baby blanket", "natural wool", "miracle gift", "#elörgüsü", "şifalı battaniye",
-         "  ", "Organic Cotton Baby Blanket"], ANLATIM)
-    assert kalan == ["organic cotton baby blanket", "elörgüsü", "Organic Cotton Baby Blanket"]
-    assert cikan == ["natural wool", "miracle gift", "şifalı battaniye"]
-
-
-def test_etsy_ilani_sinirlari_uygulanir():
-    uzun_baslik = "Handmade organic cotton baby blanket " * 6
-    etiketler = [f"baby gift {i}" for i in range(14)] + ["a very long tag over twenty chars", "natural linen"]
-    c = SahteIstemci({"baslik": uzun_baslik, "ozellikler": ["Material: organic cotton yarn"],
-                      "aciklama": "Hand knitted.", "etiketler": etiketler, "eksik_bilgiler": ["ölçü"]})
-    ilan = satis.pazaryeri_ilani_uret(ANLATIM, "Tekstil / El sanatı", "🌍 Etsy (İngilizce)", client=c)
-    assert len(ilan.baslik) <= satis.ETSY_BASLIK and not ilan.baslik.endswith(" ")
-    assert len(ilan.etiketler) == 13 and all(len(e) <= 20 for e in ilan.etiketler)
-    assert "a very long tag over twenty chars" in ilan.cikarilan_etiketler
-    assert "natural linen" in ilan.cikarilan_etiketler            # anlatımda keten/doğal yok
-    assert ilan.eksik_bilgiler == ["ölçü"]
-    assert "İNGİLİZCE" in c.promptlar[0][0]
+        ["organik pamuk bebek battaniyesi", "ipek şal", "şifalı battaniye", "#elörgüsü", "  ",
+         "Organik Pamuk Bebek Battaniyesi"], ANLATIM)
+    assert kalan == ["organik pamuk bebek battaniyesi", "elörgüsü",
+                     "Organik Pamuk Bebek Battaniyesi"]            # organik/pamuk anlatımda geçiyor
+    assert cikan == ["ipek şal", "şifalı battaniye"]                # ipek anlatımda yok, şifalı yasak
 
 
 def test_trendyol_ilani_ve_hatalar():
     c = SahteIstemci({"baslik": "El Örgüsü Organik Pamuk Bebek Battaniyesi " * 4, "ozellikler": [],
                       "aciklama": "Elde örülür.", "etiketler": ["bebek battaniyesi"], "eksik_bilgiler": []})
     ilan = satis.pazaryeri_ilani_uret(ANLATIM, "Tekstil / El sanatı", "🟠 Trendyol", client=c)
-    assert len(ilan.baslik) <= satis.TR_BASLIK and "TÜRKÇE" in c.promptlar[0][0]
+    assert len(ilan.baslik) <= satis.TR_BASLIK and "Trendyol" in c.promptlar[0][0]
     assert "el yapımı" in c.promptlar[0][0]                        # kategori anahtar kelimeleri
     _hata_bekle(satis.pazaryeri_ilani_uret, ANLATIM, "Gıda", "Amazon", client=c)
     _hata_bekle(satis.pazaryeri_ilani_uret, "kısa", "Gıda", "🟠 Trendyol", client=c)

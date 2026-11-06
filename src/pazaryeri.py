@@ -20,7 +20,7 @@ import math
 from datetime import date
 
 # Üreticinin satabileceği yerler. "Kendi satışım" komisyonsuz (elden, WhatsApp, kendi sitesi).
-PLATFORMLAR = ["Kendi satışım", "Trendyol", "Hepsiburada", "Shopier", "Etsy"]
+PLATFORMLAR = ["Kendi satışım", "Trendyol", "Hepsiburada", "Shopier"]
 
 # Oranı panelde nerede bulacağına dair yol tarifi (oranın kendisi değil, yeri).
 NEREDE_YAZAR = {
@@ -30,8 +30,6 @@ NEREDE_YAZAR = {
                    "Komisyonlar KDV hariç ilan edilir; hakediş ekranında KDV'li tutarı görürsünüz.",
     "Shopier": "Shopier paneli → Ayarlar / Ödemeler → İşlem ücretleri. Oran satış hacmine ve ödeme "
                "tipine (tek çekim, taksit, havale) göre değişebilir.",
-    "Etsy": "Etsy Shop Manager → Finances → Payment account. Listeleme ücreti, işlem ücreti ve ödeme "
-            "işlem ücreti ayrı satırlardır.",
     "Kendi satışım": "Elden, WhatsApp ya da kendi sitenizden satışta pazaryeri komisyonu olmaz; "
                      "yalnızca varsa ödeme/sanal POS kesintisini yazın.",
 }

@@ -20,7 +20,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from datetime import date, datetime
 
-KANALLAR = ["Instagram", "WhatsApp", "Trendyol", "Hepsiburada", "Shopier", "Etsy",
+KANALLAR = ["Instagram", "WhatsApp", "Trendyol", "Hepsiburada", "Shopier",
             "Elden satış", "Pazar / stant", "Diğer"]
 ALANLAR = ("id", "tarih", "urun", "adet", "birim_fiyat", "birim_maliyet", "kanal", "musteri", "notlar")
 MAKS_KAYIT = 2000

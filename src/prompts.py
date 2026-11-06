@@ -529,40 +529,29 @@ Yalnızca şu JSON'u ver:
 {{"cevap": ""}}"""
 
 
-def pazaryeri_ilani(anlatim: str, kategori: str, platform: str, dil: str,
+def pazaryeri_ilani(anlatim: str, kategori: str, platform: str,
                     anahtar_kelimeler: list[str] | None = None) -> str:
-    if dil == "en":
-        kural = ("Bu görevde 6. kural (Türkçe yazma) geçerli değil: ilanı İNGİLİZCE yaz (Etsy). "
-                 "Başlık en fazla 140 karakter olsun ve alıcının arama kutusuna yazacağı kelimelerle "
-                 "başlasın. En fazla 13 etiket ver; her etiket en fazla 20 karakterlik İngilizce "
-                 "arama ifadesi olsun. Özellikler ve açıklama da İngilizce olsun.")
-    else:
-        kural = ("İlanı TÜRKÇE yaz. Başlık en fazla 100 karakter olsun: ürün türü + öne çıkan özellik "
-                 "+ (anlatımda varsa) malzeme. En fazla 15 etiket ver; alıcının arama kutusuna "
-                 "yazacağı Türkçe ifadeler olsun.")
-    kelimeler = ""
-    if anahtar_kelimeler:
-        kelimeler = ("\nARAMA VERİSİNDEN GELEN ANAHTAR KELİMELER: " + ", ".join(anahtar_kelimeler) +
-                     "\nBunlardan ürüne GERÇEKTEN uyanları başlıkta ya da açıklamada doğal biçimde kullan.\n")
+    kelimeler = ", ".join(anahtar_kelimeler or []) or "—"
     return f"""{SISTEM_TALIMATI}
 
-Bu kez görevin farklı: üreticinin anlatımından {platform} için ÜRÜN İLANI hazırlayacaksın.
+Bu kez görevin farklı: üreticinin anlatımından {platform} için bir ÜRÜN İLANI hazırlayacaksın.
 
 Kurallar:
-- {kural}
-- "ozellikler": madde madde, "Özellik: değer" biçiminde (ör. "Malzeme: organik pamuk ipliği").
-  Yalnızca anlatımda geçen bilgileri yaz.
-- Ölçü, ağırlık, yıkama/saklama talimatı, renk seçenekleri gibi ilanda olması gereken ama anlatımda
-  OLMAYAN bilgileri "eksik_bilgiler" listesine Türkçe yaz; bunları UYDURMA.
-- "aciklama": 2-4 kısa paragraf; bilgi verici ve sakin; emeği ve üretim sürecini anlat.
-{kelimeler}
+- Başlık en fazla 100 karakter olsun ve alıcının arama kutusuna yazacağı kelimelerle başlasın.
+- Özellikler kısa madde madde olsun ("Malzeme: yün keçe" gibi); yalnızca anlatımda geçenler.
+- Açıklamada ölçü, malzeme, bakım gibi bilgileri anlatımdan al; UYDURMA.
+- Bilinmesi gereken ama anlatımda olmayan bilgileri "eksik_bilgiler" listesinde say.
+- En fazla 15 etiket ver; her biri alıcının arayabileceği kısa ifade olsun.
+- İddia içeren ("organik", "el yapımı" gibi) bir etiketi ancak anlatımda geçiyorsa kullan.
+
+ARAMA KELİMELERİ (yardımcı olsun diye): {kelimeler}
 ÜRÜN KATEGORİSİ: {kategori}
-ÜRETİCİNİN KENDİ ANLATIMI:
+
+ÜRETİCİNİN ANLATIMI:
 \"\"\"{anlatim}\"\"\"
 
 Yalnızca şu JSON'u ver:
 {{"baslik": "", "ozellikler": [], "aciklama": "", "etiketler": [], "eksik_bilgiler": []}}"""
-
 
 def ceviri(metin: str, hedef_dil: str = "İngilizce") -> str:
     return f"""Aşağıdaki Türkçe ürün metnini {hedef_dil}ye çevir.

@@ -45,9 +45,9 @@ def test_yeni_satis_dogrular_ve_temizler():
 
 def test_temizle_bozuk_kaydi_atlar_kimligi_korur():
     ham = {"id": "abc123def456", "urun": "Keçe patik", "adet": 2, "birim_fiyat": 300,
-           "birim_maliyet": 120, "kanal": "Etsy", "tarih": "2026-10-02"}
+           "birim_maliyet": 120, "kanal": "Shopier", "tarih": "2026-10-02"}
     kayit = defter.temizle(ham)
-    assert kayit["id"] == "abc123def456" and kayit["kanal"] == "Etsy"
+    assert kayit["id"] == "abc123def456" and kayit["kanal"] == "Shopier"
     assert defter.temizle({"urun": "x", "adet": 1, "birim_fiyat": 1}) is None     # ürün adı kısa
     assert defter.temizle("metin") is None
     bilinmeyen = defter.temizle({"urun": "Sabun", "adet": 1, "birim_fiyat": 50, "kanal": "Pazaryeri X"})
@@ -56,12 +56,12 @@ def test_temizle_bozuk_kaydi_atlar_kimligi_korur():
 
 # ---------------------------------------------------------------- toplamlar
 def test_ozet_ciro_kar_ve_en_cok_satan():
-    satislar = [satis(adet=2), satis("Keçe patik", 5, 200, 80, "Etsy", "2026-11-12"),
+    satislar = [satis(adet=2), satis("Keçe patik", 5, 200, 80, "Shopier", "2026-11-12"),
                 satis("Vişne reçeli", 3, 150, 90, "Instagram", "2026-10-20")]
     kasim = defter.ozet(satislar, date(2026, 11, 1), BUGUN)
     assert kasim.satis_sayisi == 2 and kasim.adet == 7
     assert kasim.ciro == 2 * 150 + 5 * 200 and kasim.kar == 2 * 60 + 5 * 120
-    assert kasim.en_cok_urun == ("Keçe patik", 5) and kasim.en_iyi_kanal == ("Etsy", 1000)
+    assert kasim.en_cok_urun == ("Keçe patik", 5) and kasim.en_iyi_kanal == ("Shopier", 1000)
     assert kasim.ortalama_satis == round(1300 / 2, 2)
 
     tumu = defter.ozet(satislar)
@@ -90,7 +90,7 @@ def test_ozet_ay_sonuna_kadar_sayar():
 
 def test_icgoruler_sayilara_dayanir():
     satislar = [satis(adet=2, gun="2026-11-10"),                       # bu ay: 300 ciro, 120 kâr
-                satis("Keçe patik", 1, 500, 100, "Etsy", "2026-11-15"),
+                satis("Keçe patik", 1, 500, 100, "Shopier", "2026-11-15"),
                 satis("Vişne reçeli", 1, 150, 90, "Instagram", "2026-10-05")]   # geçen ay: 150
     notlar = " ".join(defter.icgoruler(satislar, BUGUN))
     assert "3 satış" not in notlar and "2 satış" in notlar

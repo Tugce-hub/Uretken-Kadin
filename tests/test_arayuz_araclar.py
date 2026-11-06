@@ -166,7 +166,7 @@ def test_satis_defteri_kaydeder_ozetler_ve_siler():
 
 
 def test_satis_defteri_hesapta_saklanir():
-    kayit = defter.yeni_satis("Keçe patik", 2, 300, 120, "Etsy", "2026-11-05")
+    kayit = defter.yeni_satis("Keçe patik", 2, 300, 120, "Shopier", "2026-11-05")
     belge = hesap.belge([], [], None, [kayit])
     geri = __import__("takvim").ice_aktar(belge)[3]
     assert geri[0]["urun"] == "Keçe patik" and defter.kar(geri[0]) == 360
@@ -268,14 +268,14 @@ def test_musteri_hazir_cevap_ve_mesaja_ozel_cevap():
 
 
 def test_pazaryeri_ilani_eksik_bilgi_ve_cikarilan_etiketler():
-    sahte = satis.Ilan("🌍 Etsy (İngilizce)", "Handmade felt baby booties", ["Material: wool felt"],
+    sahte = satis.Ilan("🟠 Trendyol", "El Yapımı Keçe Bebek Patiği", ["Malzeme: yün keçe"],
                        "Hand stitched.", ["felt booties"], ["ölçü"], ["organic cotton"])
     with yamala(satis, pazaryeri_ilani_uret=lambda *a, **k: sahte):
         at = uygulama("satis", satis_sekme=SATIS[2], gecmis=[kayit(1)])
         at.button(key="ilan_btn").click().run()
     hatasiz(at)
     m = metinler(at)
-    assert "Handmade felt baby booties" in m and "ölçü" in m and "organic cotton" in m
+    assert "El Yapımı Keçe Bebek Patiği" in m and "ölçü" in m and "organic cotton" in m
 
 
 def test_pazaryeri_kesintileri_kullanicidan_alinir_ve_saklanir():

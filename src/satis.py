@@ -4,7 +4,7 @@
 
   • Fiyat hesaplayıcı : emeği de sayan, komisyonu ve kargoyu içeren şeffaf formül (yapay zekâ yok)
   • Müşteriye cevap   : hazır cevap şablonları (yapay zekâ yok) + mesaja özel cevap taslağı (Gemini)
-  • Pazaryeri ilanı   : Trendyol / Hepsiburada / Etsy (İngilizce) biçiminde ilan + çeviri (Gemini)
+  • Pazaryeri ilanı   : Trendyol / Hepsiburada biçiminde ilan + ayrı çeviri aracı (Gemini)
   • Özel günler       : kurala göre hesaplanan günler (yapay zekâ yok) + kampanya önerisi (Gemini)
 
 Komisyon ve vergi oranları bilerek koda gömülmedi: platformlar oranları sık değiştirir ve
@@ -172,16 +172,8 @@ def sesli_cevap_duzenle(ham_metin: str, ton: str = "🌸 Samimi", ozenli: bool =
 # ---------------------------------------------------------------------------
 # Pazaryeri ilanı ve çeviri
 # ---------------------------------------------------------------------------
-PLATFORMLAR = {"🟠 Trendyol": "tr", "🟧 Hepsiburada": "tr", "🌍 Etsy (İngilizce)": "en"}
+PLATFORMLAR = {"🟠 Trendyol": "tr", "🟧 Hepsiburada": "tr"}
 TR_BASLIK = 100
-ETSY_BASLIK = 140
-ETSY_ETIKET_ADET = 13
-ETSY_ETIKET_UZUNLUK = 20
-# İngilizce etiketteki iddia → anlatımda geçmesi gereken Türkçe kök (hashtag süzgeciyle aynı mantık)
-_EN_KANIT = {"organic": "organik", "natural": "doğal", "cotton": "pamuk", "wool": "yün",
-             "silk": "ipek", "silver": "gümüş", "gold": "altın", "leather": "deri", "linen": "keten",
-             "bamboo": "bambu", "vegan": "vegan", "gluten": "glutensiz"}
-_EN_YASAK = ("miracle", "cure", "healing", "guarantee", "medical")
 
 
 @dataclass
@@ -214,9 +206,7 @@ def etiket_denetle(etiketler: list, anlatim: str) -> tuple[list[str], list[str]]
         kucuk = uret._tr_kucuk(etiket)
         bitisik = kucuk.replace(" ", "")
         uygun = (not any(y in bitisik for y in uret._YASAK_HASHTAG_KOKLERI)
-                 and all(k in kaynak for k in uret._KANIT_ISTEYEN_KOKLER if k in bitisik)
-                 and not any(y in kucuk for y in _EN_YASAK)
-                 and all(tr in kaynak for en, tr in _EN_KANIT.items() if en in kucuk))
+                 and all(k in kaynak for k in uret._KANIT_ISTEYEN_KOKLER if k in bitisik))
         (kalan if uygun else cikan).append(etiket)
     return list(dict.fromkeys(kalan)), list(dict.fromkeys(cikan))
 
@@ -235,23 +225,18 @@ def pazaryeri_ilani_uret(anlatim: str, kategori: str, platform: str, ozenli: boo
     anlatim = (anlatim or "").strip()
     if len(anlatim.split()) < 5:
         raise ValueError("Ürününüzü birkaç cümleyle anlatın.")
-    dil = PLATFORMLAR[platform]
     ad = platform.split(" ", 1)[1]
-    kelimeler = prompts.KATEGORI_KELIMELERI.get(kategori) if dil == "tr" else None
+    kelimeler = prompts.KATEGORI_KELIMELERI.get(kategori)
     veri = uret.json_coz(uret.metin_uret(
-        prompts.pazaryeri_ilani(anlatim[:4000], kategori, ad, dil, kelimeler),
+        prompts.pazaryeri_ilani(anlatim[:4000], kategori, ad, kelimeler),
         ozenli=ozenli, json_yanit=True, client=client))
 
-    baslik = _kisalt(str(veri.get("baslik", "")), ETSY_BASLIK if dil == "en" else TR_BASLIK)
+    baslik = _kisalt(str(veri.get("baslik", "")), TR_BASLIK)
     aciklama = str(veri.get("aciklama", "")).strip()
     if not baslik or not aciklama:
         raise ValueError("İlan hazırlanamadı, tekrar deneyin.")
     etiketler, cikan = etiket_denetle(_liste(veri.get("etiketler")), anlatim)
-    if dil == "en":                      # Etsy sınırları: en fazla 13 etiket, her biri ≤ 20 karakter
-        cikan += [e for e in etiketler if len(e) > ETSY_ETIKET_UZUNLUK]
-        etiketler = [e for e in etiketler if len(e) <= ETSY_ETIKET_UZUNLUK][:ETSY_ETIKET_ADET]
-    else:
-        etiketler = etiketler[:15]
+    etiketler = etiketler[:15]
     return Ilan(
         platform=platform, baslik=baslik,
         ozellikler=[str(x).strip() for x in _liste(veri.get("ozellikler")) if str(x).strip()][:10],
