@@ -101,7 +101,7 @@ def test_ziyaretci_tanitim_sayfasindan_kayda_gider():
     metin = metinler(at)
     assert "Neler yapabilirsiniz" in metin and "Kimler için" in metin and "Sık sorulanlar" in metin
     assert not any(b.key == "ayar_gelistirici" for b in at.button)          # kenar çubuğunda geliştirici modu yok
-    at.button(key="tanitim_alt_kayit").click().run()
+    at.button(key="tanitim_ust_kayit").click().run()
     hatasiz(at)
     assert at.session_state["ekran"] == "giris" and at.session_state["giris_sekme"] == "✨ Kayıt ol"
     assert any(t.key == "kayit_eposta" for t in at.text_input)
@@ -130,8 +130,11 @@ def test_nasil_kullanilir_videosu_baglanti_varken_gorunur():
         yardim = uygulama("yardim")                               # yardım ekranında da var
         assert any(b.key == "yardim_video" for b in yardim.button)
 
-        ziyaretci = uygulama("karsilama", kullanici=None)         # tanıtım sayfasında yok
-        assert not any(b.key.endswith("_video") for b in ziyaretci.button)
+        ziyaretci = uygulama("karsilama", kullanici=None)         # ziyaretçi kenar çubuğundan izler
+        assert not any(b.key == "araclar_video" for b in ziyaretci.button)
+        ziyaretci.button(key="kenar_video").click().run()
+        hatasiz(ziyaretci)
+        assert ziyaretci.session_state["ekran"] == "yardim" and ziyaretci.session_state["yardim_video_acik"]
     finally:
         video.VIDEO_ADRESI = eski
 

@@ -108,10 +108,7 @@ CSS = """
 .guvence .ikon { font-size:1.5rem; line-height:1.2; }
 .guvence b { font-family:'Baloo 2'; font-size:1.05rem; display:block; }
 .guvence p { margin:0; font-size:.9rem; color:var(--ink-2); line-height:1.45; }
-.son-cagri { text-align:center; background:var(--plum); color:#fff; border:2.5px solid var(--ink);
   border-radius:24px; padding:1.6rem 1.2rem 1.2rem; box-shadow:var(--golge-lg); margin:2.6rem 0 .9rem; }
-.son-cagri h3 { color:#fff !important; font-family:'Baloo 2'; font-weight:800; font-size:1.7rem; margin:0 0 .3rem; }
-.son-cagri p { color:#FBE9F5 !important; margin:0; font-weight:600; }
 @media (max-width:640px) {
   .ornek { grid-template-columns:1fr; }
   .ornek .ok { transform:rotate(90deg); }
@@ -225,16 +222,3 @@ def tanitim_sayfasi(b: Baglam) -> None:
     for soru, cevap in SSS:
         with st.expander(soru):
             st.markdown(cevap)
-
-    # Son çağrı
-    st.markdown('<div class="son-cagri"><h3>Emeğinizin sesini duyurmaya hazır mısınız?</h3>'
-                '<p>Hesabınızı oluşturun, ilk içeriğinizi birkaç dakikada hazırlayın.</p></div>',
-                unsafe_allow_html=True)
-    _cagri_dugmeleri(b, "tanitim_alt")
-
-    st.markdown("<div style='height:1.2rem'></div>", unsafe_allow_html=True)
-    k1, k2 = st.columns(2)
-    if k1.button("❓ Nasıl kullanılır?", use_container_width=True, key="tanitim_yardim"):
-        b.git("yardim")
-    if k2.button("🏢 Firmalar için API", use_container_width=True, key="tanitim_api"):
-        b.git("api")

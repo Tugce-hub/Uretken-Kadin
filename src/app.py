@@ -199,6 +199,13 @@ with st.sidebar:
         if st.button("✏️ Sizin gibi yazmasını öğretin", use_container_width=True, key="kenar_ton"):
             git("ton")
 
+    if video.var_mi():
+        st.markdown('<div class="kenar-bolum">🎬 Yeni misiniz?</div>', unsafe_allow_html=True)
+        if st.button(f"▶️ Nasıl kullanılır? ({video.SURE})", use_container_width=True, key="kenar_video",
+                     help="Uygulamanın tüm adımlarını anlatan kısa video"):
+            st.session_state["yardim_video_acik"] = True
+            git("yardim")
+
     st.markdown('<div class="kenar-bolum">🏢 Firmalar ve kurumlar için</div>',
                 unsafe_allow_html=True)
     if st.button("🔌 API ile entegrasyon", use_container_width=True, key="kenar_api",
