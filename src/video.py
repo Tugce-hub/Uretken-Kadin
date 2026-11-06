@@ -15,7 +15,7 @@ import os
 
 import streamlit as st
 
-VIDEO_ADRESI = ""          # örn. "https://www.youtube.com/watch?v=..."
+VIDEO_ADRESI = "https://youtu.be/8xRvJpisx9o"      # YouTube, liste dışı
 SURE = "1,5 dakika"
 ETIKET = f"▶️ Nasıl kullanılır? ({SURE})"
 
