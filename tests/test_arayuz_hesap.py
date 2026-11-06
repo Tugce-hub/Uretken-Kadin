@@ -148,7 +148,7 @@ def test_cikis_ve_hesap_silme():
         raise AssertionError("silinen hesapla giriş yapılabildi")
     except ValueError:
         pass
-    assert hesap.verileri_yukle(k.id) == ([], [], [])
+    assert hesap.verileri_yukle(k.id) == ([], [], [], [])
 
 
 if __name__ == "__main__":

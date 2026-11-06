@@ -18,6 +18,7 @@ from PIL import Image, ImageDraw  # noqa: E402
 from streamlit.testing.v1 import AppTest  # noqa: E402
 
 import ekran_araclar  # noqa: E402
+import defter  # noqa: E402
 import gorsel  # noqa: E402
 import hesap  # noqa: E402
 import satis  # noqa: E402
@@ -87,7 +88,7 @@ def hatasiz(at: AppTest) -> None:
 def test_arac_kutusu_gezinir_ve_giris_yapan_tanitimi_atlar():
     at = uygulama("araclar")
     hatasiz(at)
-    assert metinler(at).count('class="arac-karti') == 4
+    assert metinler(at).count('class="arac-karti') == 5     # içerik, görsel, satış, defter, pano
     at.button(key="kutu_gorsel").click().run()
     assert at.session_state["ekran"] == "gorsel"
     at = uygulama("karsilama")
@@ -139,6 +140,36 @@ def test_nasil_kullanilir_videosu_baglanti_varken_gorunur():
         assert ziyaretci.session_state["ekran"] == "yardim" and ziyaretci.session_state["yardim_video_acik"]
     finally:
         video.VIDEO_ADRESI = eski
+
+
+def test_satis_defteri_kaydeder_ozetler_ve_siler():
+    at = uygulama("defter")
+    hatasiz(at)
+    assert "Defteriniz henüz boş" in metinler(at)
+
+    at.text_input(key="df_urun_yeni").input("Vişne reçeli")
+    at.number_input(key="df_adet").set_value(3.0)
+    at.number_input(key="df_fiyat").set_value(150.0)
+    at.number_input(key="df_maliyet").set_value(90.0)
+    next(b for b in at.button if "Satışı kaydet" in b.label).click().run()
+    hatasiz(at)
+    kayitlar = at.session_state["satislar"]
+    assert len(kayitlar) == 1 and kayitlar[0]["urun"] == "Vişne reçeli"
+    metin = metinler(at)
+    assert "450 TL" in metin                                     # 3 × 150 ciro
+    assert "180 TL" in metin                                     # 3 × (150 − 90) kâr
+    assert "En çok satan" in metin
+
+    at.button(key=f"df_sil_{kayitlar[0]['id']}").click().run()
+    hatasiz(at)
+    assert at.session_state["satislar"] == []
+
+
+def test_satis_defteri_hesapta_saklanir():
+    kayit = defter.yeni_satis("Keçe patik", 2, 300, 120, "Etsy", "2026-11-05")
+    belge = hesap.belge([], [], None, [kayit])
+    _, _, _, geri = __import__("takvim").ice_aktar(belge)[:4]
+    assert geri[0]["urun"] == "Keçe patik" and defter.kar(geri[0]) == 360
 
 
 def test_ust_menude_araclar_dugmesi():

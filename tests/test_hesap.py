@@ -134,10 +134,10 @@ def test_veriler_kaydedilir_yuklenir_ve_kullanicilar_ayridir():
     plan = [takvim.PlanOgesi(zaman="2026-09-20T20:00:00+03:00", kanal="instagram", baslik="Salça",
                              metin="ig 1", icerik_id="ic1", id="p1")]
     hesap.verileri_kaydet(ayse.id, hesap.belge([_icerik(1), _icerik(2)], plan, ["benim üslubum"]), m=m)
-    icerikler, yuklu_plan, uslup = hesap.verileri_yukle(ayse.id, m=m)
+    icerikler, yuklu_plan, uslup, satislar = hesap.verileri_yukle(ayse.id, m=m)
     assert [k["id"] for k in icerikler] == ["ic1", "ic2"] and icerikler[0]["fiyat"] == 181.0
     assert yuklu_plan == plan and uslup == ["benim üslubum"]
-    assert hesap.verileri_yukle(fatma.id, m=m) == ([], [], [])                     # başkasının verisi görünmez
+    assert hesap.verileri_yukle(fatma.id, m=m) == ([], [], [], [])                     # başkasının verisi görünmez
     hesap.verileri_kaydet(ayse.id, hesap.belge([_icerik(3)], [], None), m=m)       # güncelleme (upsert)
     assert [k["id"] for k in hesap.verileri_yukle(ayse.id, m=m)[0]] == ["ic3"]
     _hata(hesap.verileri_kaydet, ayse.id, "x" * (takvim.MAKS_DOSYA_BAYT + 1), m=m, icerir="çok büyük")
@@ -179,7 +179,7 @@ def test_hesap_silme_tum_verileri_kaldirir():
     _hata(hesap.hesabi_sil, ayse.id, "yanlis", m=m, icerir="Mevcut şifreniz")
     hesap.hesabi_sil(ayse.id, SIFRE, m=m)
     _hata(hesap.giris_yap, "ayse@ornek.com", SIFRE, m=m)
-    assert hesap.verileri_yukle(ayse.id, m=m) == ([], [], [])
+    assert hesap.verileri_yukle(ayse.id, m=m) == ([], [], [], [])
     assert hesap.kullanici_sayisi(m=m) == 1 and hesap.verileri_yukle(fatma.id, m=m)[0][0]["id"] == "ic2"
     _kayit(m)                                                                      # aynı e-postayla yeniden kayıt olunabilir
 

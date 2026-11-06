@@ -27,6 +27,7 @@ import streamlit.components.v1 as components
 import basvuru
 import ekran_araclar
 import ekran_basvuru
+import ekran_defter
 import ekran_hesap
 import ekran_tanitim
 import kalite
@@ -100,7 +101,7 @@ ORNEKLER = [
 # Oturum durumu
 # ---------------------------------------------------------------------------
 EKRANLAR = ("karsilama", "anlat", "sonuc", "pano", "iceriklerim", "ton", "yardim", "api",
-            "araclar", "gorsel", "satis", "giris", "hesap")
+            "araclar", "gorsel", "satis", "defter", "giris", "hesap")
 
 varsayilanlar = {
     "ekran": "karsilama", "yigin": [], "sonuc": None, "gecmis": [],
@@ -112,7 +113,8 @@ varsayilanlar = {
 for a, d in varsayilanlar.items():
     st.session_state.setdefault(a, d)
 # Araç ekranlarının durumu; listeler kopyalanır ki oturumlar aynı nesneyi paylaşmasın.
-for a, d in (*ekran_araclar.VARSAYILANLAR.items(), *ekran_hesap.VARSAYILANLAR.items(), ("basvuru_no", None)):
+for a, d in (*ekran_araclar.VARSAYILANLAR.items(), *ekran_hesap.VARSAYILANLAR.items(),
+             *ekran_defter.VARSAYILANLAR.items(), ("basvuru_no", None)):
     st.session_state.setdefault(a, list(d) if isinstance(d, list) else d)
 # Sayfa yenilendiyse ("beni hatırla" çereziyle) girişi geri getir — erişim kapısından önce.
 ekran_hesap.cerezden_oturum_ac()
@@ -476,6 +478,13 @@ a[data-testid^="stBaseLinkButton"] p {{ font-family:'Baloo 2','Nunito',sans-seri
 .gun-karti .kalan {{ font-size:.78rem; color:var(--muted); font-weight:700; }}
 .st-key-basvuru_kutusu {{ background:#fff; border:2.5px solid var(--ink) !important; border-radius:20px !important;
   box-shadow:var(--golge); padding:.6rem 1rem 1rem !important; margin:.4rem 0 1rem; }}
+/* Satış defteri */
+.satis-satiri {{ display:flex; align-items:center; gap:.7rem; background:#fff; border:2.5px solid var(--ink);
+  border-radius:16px; padding:.55rem .9rem; box-shadow:var(--golge-sm); margin-bottom:.45rem; }}
+.satis-satiri b {{ font-family:'Baloo 2'; font-size:1.05rem; }}
+.satis-satiri .kucuk {{ color:var(--muted); font-size:.85rem; font-weight:700; }}
+.satis-satiri .tutar {{ margin-left:auto; font-family:'Baloo 2'; font-weight:800; font-size:1.1rem;
+  color:var(--plum); white-space:nowrap; }}
 /* Hesap */
 .hesap-cip {{ margin-left:auto; font-weight:800; font-size:.9rem; background:#fff; border:2.5px solid var(--ink);
   border-radius:999px; padding:.25rem .8rem; box-shadow:var(--golge-sm); white-space:nowrap; max-width:45%;
@@ -1043,7 +1052,8 @@ def _plan_kaydet() -> None:
     uslup_dahil = bool(st.session_state.uslup_ornekleri) and st.checkbox(
         "Ton profilimi de kaydet", value=True, key="kayit_uslup")
     veri = takvim.disa_aktar(st.session_state.gecmis, st.session_state.plan,
-                             st.session_state.uslup_ornekleri if uslup_dahil else None)
+                             st.session_state.uslup_ornekleri if uslup_dahil else None,
+                             satislar=st.session_state.get("satislar", []))
     st.download_button("💾  Planımı kaydet", data=veri.encode("utf-8"),
                        file_name=f"uretken_kadin_planim_{takvim.simdi():%Y-%m-%d}.json",
                        mime="application/json", use_container_width=True, key="kayit_indir")
@@ -1055,7 +1065,7 @@ def _plan_yukle() -> None:
     if dosya is not None and st.button("📂  Yükle", use_container_width=True,
                                        key="kayit_yukle"):
         try:
-            icerikler, plan, uslup, uyarilar = takvim.ice_aktar(dosya.getvalue())
+            icerikler, plan, uslup, satislar, uyarilar = takvim.ice_aktar(dosya.getvalue())
         except ValueError as e:
             st.error(str(e))
             return
@@ -1063,8 +1073,12 @@ def _plan_yukle() -> None:
         st.session_state.plan, n_plan = takvim.birlestir(st.session_state.plan, plan)
         if uslup and not st.session_state.uslup_ornekleri:
             st.session_state.uslup_ornekleri = uslup
+        varolan = {s["id"] for s in st.session_state.get("satislar", [])}
+        yeni_satislar = [s for s in satislar if s["id"] not in varolan]
+        st.session_state.satislar = list(st.session_state.get("satislar", [])) + yeni_satislar
+        ek = f" {len(yeni_satislar)} satış kaydı." if yeni_satislar else ""
         st.session_state.pano_mesaj = " ".join(
-            [f"Yüklendi: {n_icerik} içerik, {n_plan} paylaşım."] + uyarilar)
+            [f"Yüklendi: {n_icerik} içerik, {n_plan} paylaşım.{ek}"] + uyarilar)
         st.rerun()
 
 
@@ -1433,6 +1447,8 @@ else:
         ekran_araclar.gorsel_studyosu(_baglam())
     elif ekran == "satis":
         ekran_araclar.satis_araclari(_baglam())
+    elif ekran == "defter":
+        ekran_defter.satis_defteri(ekran_defter.Baglam(ust_bar=ust_bar, git=git))
     elif ekran == "giris":
         if st.session_state.kullanici:          # zaten giriş yapılmışsa araç kutusuna
             git("araclar")

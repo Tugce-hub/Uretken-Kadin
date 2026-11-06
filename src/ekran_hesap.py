@@ -4,7 +4,7 @@
 
 Oturum: st.session_state.kullanici = {"id", "eposta", "ad", "olusturma"}; giriş yoksa None.
 Kalıcı veri akışı:
-  • Girişte hesap.verileri_yukle → içerikler, takvim ve ton profili oturuma alınır.
+  • Girişte hesap.verileri_yukle → içerikler, takvim, ton profili ve satış defteri oturuma alınır.
   • app.py her çizimin sonunda kaydet_gerekirse() çağırır: yalnızca değişiklik varsa veritabanına yazar.
   • Çıkış ve hesap silmede oturum, app.py'nin başında (hiçbir bileşen çizilmeden) temizlenir.
 """
@@ -46,7 +46,7 @@ class Baglam:
 # ---------------------------------------------------------------------------
 def oturumu_baslat(k: hesap.Kullanici, hatirla: bool | None = None) -> None:
     """Kullanıcıyı ve verilerini oturuma alır. hatirla verilirse (giriş/kayıt) tarayıcıya oturum çerezi yazılır."""
-    icerikler, plan, uslup = hesap.verileri_yukle(k.id)
+    icerikler, plan, uslup, satislar = hesap.verileri_yukle(k.id)
     if hatirla is not None:
         try:
             jeton = hesap.oturum_ac(k.id, hatirla)
@@ -59,7 +59,8 @@ def oturumu_baslat(k: hesap.Kullanici, hatirla: bool | None = None) -> None:
     st.session_state.gecmis = icerikler
     st.session_state.plan = plan
     st.session_state.uslup_ornekleri = uslup
-    st.session_state.veri_ozeti = hesap.degisiklik_ozeti(icerikler, plan, uslup)
+    st.session_state.satislar = satislar
+    st.session_state.veri_ozeti = hesap.degisiklik_ozeti(icerikler, plan, uslup, satislar)
     st.session_state.giris_sonrasi = None
 
 
@@ -122,11 +123,12 @@ def kaydet_gerekirse() -> None:
     if not k:
         return
     gecmis, plan, uslup = st.session_state.gecmis, st.session_state.plan, st.session_state.uslup_ornekleri
-    ozet = hesap.degisiklik_ozeti(gecmis, plan, uslup)
+    satislar = st.session_state.get("satislar", [])
+    ozet = hesap.degisiklik_ozeti(gecmis, plan, uslup, satislar)
     if ozet == st.session_state.get("veri_ozeti"):
         return
     try:
-        hesap.verileri_kaydet(k["id"], hesap.belge(gecmis, plan, uslup))
+        hesap.verileri_kaydet(k["id"], hesap.belge(gecmis, plan, uslup, satislar))
         st.session_state.veri_ozeti = ozet
     except ValueError as hata:
         st.toast(str(hata), icon="⚠️")
@@ -222,13 +224,15 @@ def hesabim_ekrani(b: Baglam) -> None:
     _kalicilik_uyarisi()
     satirlar = [("Ad", k["ad"]), ("E-posta", k["eposta"]), ("Üyelik", _tarih(k["olusturma"])),
                 ("Hazır içerik", str(len(st.session_state.gecmis))),
-                ("Planlı paylaşım", str(len(st.session_state.plan)))]
+                ("Planlı paylaşım", str(len(st.session_state.plan))),
+                ("Satış kaydı", str(len(st.session_state.get("satislar", []))))]
     st.markdown('<div class="hesap-karti">' + "".join(
         f'<div class="satir"><span class="etiket">{e}</span><b>{html.escape(d)}</b></div>' for e, d in satirlar)
         + "</div>", unsafe_allow_html=True)
 
     st.download_button("⬇️ Verilerimi indir", hesap.belge(st.session_state.gecmis, st.session_state.plan,
-                                                          st.session_state.uslup_ornekleri).encode("utf-8"),
+                                                          st.session_state.uslup_ornekleri,
+                                                          st.session_state.get("satislar", [])).encode("utf-8"),
                        file_name=f"uretken_kadin_verilerim_{takvim.simdi():%Y-%m-%d}.json",
                        mime="application/json", use_container_width=True, key="hesap_indir")
     st.caption("İndirdiğiniz dosyayı 🏠 Panom → Kaydet / yükle bölümünden geri yükleyebilirsiniz.")

@@ -26,6 +26,8 @@ from dataclasses import asdict, dataclass, field
 from datetime import date, datetime, time, timedelta, timezone
 from itertools import groupby
 
+import defter
+
 # Türkiye 2016'dan beri yıl boyu UTC+3 (yaz saati yok). Sabit dilim, sunucunun
 # saatinden (Streamlit Cloud: UTC) bağımsız doğru zaman verir ve Windows'ta
 # tzdata paketi gerektirmez.
@@ -279,7 +281,7 @@ def ics_olustur(ogeler: list[PlanOgesi], hatirlatma_dk: int = HATIRLATMA_DK,
 # ---------------------------------------------------------------------------
 def disa_aktar(icerikler: list[dict], plan: list[PlanOgesi],
                uslup_ornekleri: list[str] | None = None,
-               an: datetime | None = None) -> str:
+               an: datetime | None = None, satislar: list[dict] | None = None) -> str:
     veri = {
         "uygulama": UYGULAMA,
         "surum": SURUM,
@@ -289,6 +291,7 @@ def disa_aktar(icerikler: list[dict], plan: list[PlanOgesi],
                        "ekler": dict(k.get("ekler") or {})} for k in icerikler],
         "plan": [asdict(o) for o in plan],
         "uslup_ornekleri": list(uslup_ornekleri or []),
+        "satislar": [s for s in (defter.temizle(k) for k in (satislar or [])) if s][:defter.MAKS_KAYIT],
     }
     return json.dumps(veri, ensure_ascii=False, indent=2)
 
@@ -313,11 +316,11 @@ def _gecerli_id(deger) -> bool:
     return isinstance(deger, str) and bool(_ID_DESENI.fullmatch(deger))
 
 
-def ice_aktar(veri: bytes | str) -> tuple[list[dict], list[PlanOgesi], list[str], list[str]]:
+def ice_aktar(veri: bytes | str) -> tuple[list[dict], list[PlanOgesi], list[str], list[dict], list[str]]:
     """
     Kayıt dosyasını okur ve doğrular.
 
-    Döndürür: (içerikler, plan, üslup örnekleri, uyarılar). Dosya bu uygulamaya ait
+    Döndürür: (içerikler, plan, üslup örnekleri, satışlar, uyarılar). Dosya bu uygulamaya ait
     değilse ValueError. Bozuk tek tek kayıtlar atlanır ve uyarıda sayılır.
     Kimlikler widget anahtarı ve takvim UID'si olarak kullanıldığı için doğrulanır.
     """
@@ -371,8 +374,16 @@ def ice_aktar(veri: bytes | str) -> tuple[list[dict], list[PlanOgesi], list[str]
 
     uslup = [s[:MAKS_METIN] for s in _liste(ham.get("uslup_ornekleri"))
              if isinstance(s, str) and s.strip()][:3]
+
+    satislar = []
+    for k in _liste(ham.get("satislar"))[:defter.MAKS_KAYIT]:
+        kayit = defter.temizle(k)
+        if kayit is None:
+            atlanan += 1
+        else:
+            satislar.append(kayit)
     uyarilar = [f"{atlanan} kayıt okunamadı ve atlandı."] if atlanan else []
-    return icerikler, plan, uslup, uyarilar
+    return icerikler, plan, uslup, satislar, uyarilar
 
 
 def birlestir(mevcut: list, yeni: list) -> tuple[list, int]:

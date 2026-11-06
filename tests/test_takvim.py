@@ -137,7 +137,7 @@ def test_disa_ve_ice_aktarma_kayipsiz():
     plan = [PlanOgesi(zaman=AN.isoformat(), kanal="whatsapp", baslik="b", metin="m",
                       icerik_id="ic1", tamam=True, id="p1")]
     dosya = takvim.disa_aktar(icerikler, plan, ["benim üslubum"], an=AN)
-    ic, pl, us, uy = takvim.ice_aktar(dosya.encode("utf-8"))
+    ic, pl, us, sat, uy = takvim.ice_aktar(dosya.encode("utf-8"))
     assert ic == icerikler and pl == plan and us == ["benim üslubum"] and uy == []
 
 
@@ -162,7 +162,7 @@ def test_bozuk_kayitlar_atlanir_ve_kimlikler_temizlenir():
                      {"zaman": "2026-09-17T20:00:00+03:00", "kanal": "tiktok"},
                      None],
             "uslup_ornekleri": ["a", 3, "", "b", "c", "d"]}
-    ic, pl, us, uy = takvim.ice_aktar(json.dumps(veri))
+    ic, pl, us, sat, uy = takvim.ice_aktar(json.dumps(veri))
     assert len(ic) == 1 and ic[0]["id"] != "<script>" and ic[0]["anlatim"] == ""
     assert len(pl) == 1 and pl[0].id == "iyi_id" and pl[0].tamam is False
     assert pl[0].zaman_dt().utcoffset() == timedelta(hours=3)   # saat dilimi yoksa TR
