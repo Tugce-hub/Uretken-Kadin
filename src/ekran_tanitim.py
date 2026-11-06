@@ -37,7 +37,7 @@ OZELLIKLER = [
     ("📸", "Görsel stüdyosu",
      "Fotoğraf kalitesini ölçer, ışığı düzeltir; paylaşıma hazır görsel ve WhatsApp'tan "
      "gönderilebilir PDF katalog hazırlar.", "pembe"),
-    ("💰", "Satış araçları",
+    ("🧾", "Satış araçları",
      "Emeğinizi hesaba katan fiyat önerisi, müşteri mesajlarına kibar cevap, pazaryeri ilanı "
      "ve yaklaşan özel günler için kampanya fikri.", "yesil"),
     ("📅", "Panom ve takvim",

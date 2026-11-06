@@ -40,7 +40,7 @@ VARSAYILANLAR = {
 ARACLAR = [
     ("anlat", "✍️", "İçerik yaz", "Anlatımınızdan Instagram ve satış sayfası metni", "mavi"),
     ("gorsel", "📸", "Görsel stüdyosu", "Fotoğraf güzelleştir, paylaşım görseli, katalog", "sari"),
-    ("satis", "💰", "Satış araçları", "Fiyat hesapla, müşteriye cevap, ilan, özel günler", "pembe"),
+    ("satis", "🧾", "Satış araçları", "Fiyat hesapla, müşteriye cevap, ilan, özel günler", "pembe"),
     ("pano", "🏠", "Panom", "İçerikleriniz ve paylaşım takviminiz", "yesil"),
 ]
 
@@ -360,7 +360,7 @@ def _katalog(b: Baglam) -> None:
 # ===========================================================================
 def satis_araclari(b: Baglam) -> None:
     b.ust_bar()
-    _baslik("Satış araçları", "💰", "Fiyatınızı hesaplayın, müşterilere cevap verin, pazaryeri ilanı "
+    _baslik("Satış araçları", "🧾", "Fiyatınızı hesaplayın, müşterilere cevap verin, pazaryeri ilanı "
                                    "ve özel gün kampanyası hazırlayın.")
     sekme = sekme_kutusu("satis_sekme", SATIS_SEKMELER)
     if sekme == "💰 Fiyat hesapla":
