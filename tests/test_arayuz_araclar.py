@@ -132,6 +132,8 @@ def test_nasil_kullanilir_videosu_baglanti_varken_gorunur():
 
         ziyaretci = uygulama("karsilama", kullanici=None)         # ziyaretçi kenar çubuğundan izler
         assert not any(b.key == "araclar_video" for b in ziyaretci.button)
+        assert not any(b.key == "kenar_api" for b in ziyaretci.button)   # API menüsü girişten sonra
+        assert any(b.key == "kenar_api" for b in uygulama("araclar").button)
         ziyaretci.button(key="kenar_video").click().run()
         hatasiz(ziyaretci)
         assert ziyaretci.session_state["ekran"] == "yardim" and ziyaretci.session_state["yardim_video_acik"]

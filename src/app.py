@@ -39,9 +39,17 @@ import uret
 import video
 
 # ---------------------------------------------------------------------------
+def _kenar_baslangic() -> str:
+    """Ziyaretçide menü açık başlar (ne yapabileceğini görsün); giriş yapmışta kapalı, yer açılsın."""
+    try:
+        return "collapsed" if st.context.cookies.get(ekran_hesap.CEREZ_ADI) else "expanded"
+    except Exception:
+        return "expanded"
+
+
 st.set_page_config(page_title="Üretken Kadın — Emeğin dijital sesi",
                    page_icon=logo.page_icon(), layout="centered",
-                   initial_sidebar_state="collapsed")
+                   initial_sidebar_state=_kenar_baslangic())
 
 # Streamlit Cloud'da API anahtarı "secret" olarak gelir; uret.py os.getenv okur.
 try:
@@ -206,11 +214,12 @@ with st.sidebar:
             st.session_state["yardim_video_acik"] = True
             git("yardim")
 
-    st.markdown('<div class="kenar-bolum">🏢 Firmalar ve kurumlar için</div>',
-                unsafe_allow_html=True)
-    if st.button("🔌 API ile entegrasyon", use_container_width=True, key="kenar_api",
-                 help="Üretken Kadın'ı kendi platformunuza bağlamak için belgeler"):
-        git("api")
+    if st.session_state.kullanici:
+        st.markdown('<div class="kenar-bolum">🏢 Firmalar ve kurumlar için</div>',
+                    unsafe_allow_html=True)
+        if st.button("🔌 API ile entegrasyon", use_container_width=True, key="kenar_api",
+                     help="Üretken Kadın'ı kendi platformunuza bağlamak için belgeler"):
+            git("api")
 
     st.markdown('<div class="kenar-not">Yayınlamadan önce metinleri okuyun — son karar '
                 'her zaman sizindir.</div>', unsafe_allow_html=True)
