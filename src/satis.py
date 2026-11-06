@@ -37,6 +37,7 @@ class FiyatGirdisi:
     komisyon_yuzde: float = 0.0    # platform + ödeme komisyonu toplamı (%)
     kar_yuzde: float = 20.0        # maliyetin üstüne eklenecek kâr (%)
     yuvarlama: int = 5             # fiyat bu tutarın katına yukarı yuvarlanır (0: yuvarlanmaz)
+    sabit_kesinti: float = 0.0     # satış başına sabit kesinti: hizmet/işlem bedeli (TL)
 
 
 @dataclass
@@ -45,6 +46,7 @@ class FiyatDokumu:
     malzeme_ambalaj: float
     emek_karsiligi: float
     komisyon: float
+    sabit_kesinti: float
     kargo: float
     kar: float                     # emek karşılığı ödendikten sonra kalan
     eline_gecen: float             # satış fiyatı − komisyon − kargo
@@ -54,7 +56,7 @@ class FiyatDokumu:
 def _dogrula(g: FiyatGirdisi) -> None:
     alanlar = {"Malzeme": g.malzeme, "Emek süresi": g.emek_saat, "Saatlik ücret": g.saat_ucreti,
                "Ambalaj": g.ambalaj, "Kargo": g.kargo, "Komisyon": g.komisyon_yuzde,
-               "Kâr oranı": g.kar_yuzde}
+               "Sabit kesinti": g.sabit_kesinti, "Kâr oranı": g.kar_yuzde}
     for ad, deger in alanlar.items():
         if deger is None or not math.isfinite(deger) or deger < 0:
             raise ValueError(f"{ad} 0 ya da daha büyük bir sayı olmalı.")
@@ -70,11 +72,12 @@ def dokum(g: FiyatGirdisi, satis_fiyati: float) -> FiyatDokumu:
     malzeme_ambalaj = g.malzeme + g.ambalaj
     emek = g.emek_saat * g.saat_ucreti
     komisyon = satis_fiyati * g.komisyon_yuzde / 100
-    eline_gecen = satis_fiyati - komisyon - g.kargo
+    eline_gecen = satis_fiyati - komisyon - g.sabit_kesinti - g.kargo
     saatlik = (eline_gecen - malzeme_ambalaj) / g.emek_saat if g.emek_saat > 0 else None
     return FiyatDokumu(
         satis_fiyati=round(satis_fiyati, 2), malzeme_ambalaj=round(malzeme_ambalaj, 2),
-        emek_karsiligi=round(emek, 2), komisyon=round(komisyon, 2), kargo=round(g.kargo, 2),
+        emek_karsiligi=round(emek, 2), komisyon=round(komisyon, 2),
+        sabit_kesinti=round(g.sabit_kesinti, 2), kargo=round(g.kargo, 2),
         kar=round(eline_gecen - malzeme_ambalaj - emek, 2), eline_gecen=round(eline_gecen, 2),
         gercek_saatlik=None if saatlik is None else round(saatlik, 2))
 
@@ -82,13 +85,14 @@ def dokum(g: FiyatGirdisi, satis_fiyati: float) -> FiyatDokumu:
 def fiyat_oner(g: FiyatGirdisi) -> FiyatDokumu:
     """
     Komisyon ve kargo düşüldükten sonra elinize maliyet + kâr kalacak satış fiyatı:
-        P − P·komisyon − kargo = (malzeme + ambalaj + emek) · (1 + kâr)
-        P = [(malzeme + ambalaj + emek) · (1 + kâr) + kargo] / (1 − komisyon)
+        P − P·komisyon − sabit kesinti − kargo = (malzeme + ambalaj + emek) · (1 + kâr)
+        P = [(malzeme + ambalaj + emek) · (1 + kâr) + kargo + sabit kesinti] / (1 − komisyon)
     P sonra `yuvarlama` tutarının katına YUKARI yuvarlanır; kâr azalmaz.
     """
     _dogrula(g)
     maliyet = g.malzeme + g.ambalaj + g.emek_saat * g.saat_ucreti
-    ham = (maliyet * (1 + g.kar_yuzde / 100) + g.kargo) / (1 - g.komisyon_yuzde / 100)
+    ham = ((maliyet * (1 + g.kar_yuzde / 100) + g.kargo + g.sabit_kesinti)
+           / (1 - g.komisyon_yuzde / 100))
     if g.yuvarlama and g.yuvarlama > 0:
         fiyat = math.ceil(round(ham / g.yuvarlama, 6)) * g.yuvarlama
     else:

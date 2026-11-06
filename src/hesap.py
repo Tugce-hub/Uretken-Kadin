@@ -348,14 +348,15 @@ _OZET_ANI = datetime(2000, 1, 1, tzinfo=takvim.TR)
 
 
 def belge(gecmis: list[dict], plan: list, uslup: list[str] | None,
-          satislar: list[dict] | None = None) -> str:
-    return takvim.disa_aktar(gecmis, plan, uslup, satislar=satislar)
+          satislar: list[dict] | None = None, pazaryerleri: dict | None = None) -> str:
+    return takvim.disa_aktar(gecmis, plan, uslup, satislar=satislar, pazaryerleri=pazaryerleri)
 
 
 def degisiklik_ozeti(gecmis: list[dict], plan: list, uslup: list[str] | None,
-                     satislar: list[dict] | None = None) -> str:
+                     satislar: list[dict] | None = None, pazaryerleri: dict | None = None) -> str:
     """Kaydetme zamanından bağımsız özet: yalnızca içerik değişince farklıdır (gereksiz yazma olmasın)."""
-    belge_metni = takvim.disa_aktar(gecmis, plan, uslup, an=_OZET_ANI, satislar=satislar)
+    belge_metni = takvim.disa_aktar(gecmis, plan, uslup, an=_OZET_ANI, satislar=satislar,
+                                    pazaryerleri=pazaryerleri)
     return hashlib.sha256(belge_metni.encode("utf-8")).hexdigest()
 
 
@@ -372,14 +373,14 @@ def verileri_kaydet(kullanici_id: str, belge_metni: str, m: sa.Engine | None = N
 
 
 def verileri_yukle(kullanici_id: str,
-                   m: sa.Engine | None = None) -> tuple[list[dict], list, list[str], list[dict]]:
+                   m: sa.Engine | None = None) -> tuple[list[dict], list, list[str], list[dict], dict]:
     with (m or motor()).connect() as b:
         metin = b.execute(sa.select(kullanici_verileri.c.belge)
                           .where(kullanici_verileri.c.kullanici_id == kullanici_id)).scalar_one_or_none()
     if not metin:
-        return [], [], [], []
-    icerikler, plan, uslup, satislar, _ = takvim.ice_aktar(metin)
-    return icerikler, plan, uslup, satislar
+        return [], [], [], [], {}
+    icerikler, plan, uslup, satislar, pazaryerleri, _ = takvim.ice_aktar(metin)
+    return icerikler, plan, uslup, satislar, pazaryerleri
 
 
 # ---------------------------------------------------------------------------

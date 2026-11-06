@@ -27,6 +27,7 @@ from datetime import date, datetime, time, timedelta, timezone
 from itertools import groupby
 
 import defter
+import pazaryeri
 
 # Türkiye 2016'dan beri yıl boyu UTC+3 (yaz saati yok). Sabit dilim, sunucunun
 # saatinden (Streamlit Cloud: UTC) bağımsız doğru zaman verir ve Windows'ta
@@ -281,7 +282,8 @@ def ics_olustur(ogeler: list[PlanOgesi], hatirlatma_dk: int = HATIRLATMA_DK,
 # ---------------------------------------------------------------------------
 def disa_aktar(icerikler: list[dict], plan: list[PlanOgesi],
                uslup_ornekleri: list[str] | None = None,
-               an: datetime | None = None, satislar: list[dict] | None = None) -> str:
+               an: datetime | None = None, satislar: list[dict] | None = None,
+               pazaryerleri: dict | None = None) -> str:
     veri = {
         "uygulama": UYGULAMA,
         "surum": SURUM,
@@ -292,6 +294,7 @@ def disa_aktar(icerikler: list[dict], plan: list[PlanOgesi],
         "plan": [asdict(o) for o in plan],
         "uslup_ornekleri": list(uslup_ornekleri or []),
         "satislar": [s for s in (defter.temizle(k) for k in (satislar or [])) if s][:defter.MAKS_KAYIT],
+        "pazaryerleri": pazaryeri.temizle(pazaryerleri or {}),
     }
     return json.dumps(veri, ensure_ascii=False, indent=2)
 
@@ -316,11 +319,12 @@ def _gecerli_id(deger) -> bool:
     return isinstance(deger, str) and bool(_ID_DESENI.fullmatch(deger))
 
 
-def ice_aktar(veri: bytes | str) -> tuple[list[dict], list[PlanOgesi], list[str], list[dict], list[str]]:
+def ice_aktar(veri: bytes | str) -> tuple[list[dict], list[PlanOgesi], list[str], list[dict],
+                                          dict, list[str]]:
     """
     Kayıt dosyasını okur ve doğrular.
 
-    Döndürür: (içerikler, plan, üslup örnekleri, satışlar, uyarılar). Dosya bu uygulamaya ait
+    Döndürür: (içerikler, plan, üslup örnekleri, satışlar, pazaryeri ayarları, uyarılar). Dosya bu uygulamaya ait
     değilse ValueError. Bozuk tek tek kayıtlar atlanır ve uyarıda sayılır.
     Kimlikler widget anahtarı ve takvim UID'si olarak kullanıldığı için doğrulanır.
     """
@@ -383,7 +387,7 @@ def ice_aktar(veri: bytes | str) -> tuple[list[dict], list[PlanOgesi], list[str]
         else:
             satislar.append(kayit)
     uyarilar = [f"{atlanan} kayıt okunamadı ve atlandı."] if atlanan else []
-    return icerikler, plan, uslup, satislar, uyarilar
+    return icerikler, plan, uslup, satislar, pazaryeri.temizle(ham.get("pazaryerleri")), uyarilar
 
 
 def birlestir(mevcut: list, yeni: list) -> tuple[list, int]:

@@ -21,6 +21,7 @@ import streamlit as st
 
 import gorsel
 import kvkk
+import pazaryeri
 import satis
 import takvim
 import uret
@@ -32,7 +33,7 @@ SATIS_SEKMELER = ["💰 Fiyat hesapla", "💬 Müşteriye cevap", "🛒 Pazaryer
 # app.py oturum varsayılanlarına eklenir
 VARSAYILANLAR = {
     "gs_sekme": GS_SEKMELER[0], "satis_sekme": SATIS_SEKMELER[0], "secili_kayit_id": None,
-    "gs_foto": None, "gs_foto_kimlik": None, "gs_duzeltilmis": None,
+    "fy_platform_secim": pazaryeri.PLATFORMLAR[0], "pazaryerleri": {}, "gs_foto": None, "gs_foto_kimlik": None, "gs_duzeltilmis": None,
     "gs_anlatim": None, "gs_paylasim": None, "kat_pdf": None,
     "mc_cevap": None, "ilan_sonuc": None, "ilan_ceviri": None, "og_oneri": None, "ozel_gunler_ek": [],
 }
@@ -386,9 +387,66 @@ def _fiyat_cubugu(d: satis.FiyatDokumu) -> str:
             f'<ul class="lejant">{lejant}</ul>')
 
 
+def _pazaryeri_secimi() -> tuple[float, float, float]:
+    """Nereden satılacağını sorar; üreticinin kendi girdiği kesintileri döndürür (komisyon, sabit, kargo)."""
+    ayarlar = st.session_state.pazaryerleri
+    platform = st.pills("Nereden satacaksınız?", pazaryeri.PLATFORMLAR,
+                        default=st.session_state.get("fy_platform_secim") or pazaryeri.PLATFORMLAR[0],
+                        key="fy_platform") or pazaryeri.PLATFORMLAR[0]
+    st.session_state.fy_platform_secim = platform
+    kayit = pazaryeri.ayar(ayarlar, platform)
+
+    if platform == "Trendyol":
+        with st.expander("🌸 Kadın girişimci ya da kadın kooperatifi misiniz? Komisyonunuz farklı olabilir"):
+            st.markdown(pazaryeri.KADIN_DESTEGI)
+            st.caption(pazaryeri.KADIN_DESTEGI_KAYNAK)
+
+    if kayit:
+        st.caption(f"📌 Sizin girdiğiniz kesintiler: {pazaryeri.ozet_satiri(kayit)}")
+        if pazaryeri.eskimis_mi(kayit):
+            st.info("Bu oranları gireli 6 aydan fazla olmuş. Pazaryerleri oranları değiştirebiliyor; "
+                    "panelinizden bir kontrol edin.")
+    else:
+        st.info(f"**{platform}** için kesintilerinizi henüz girmediniz. Oranı uydurmuyoruz: "
+                f"bir kez girin, bu hesapta saklansın.\n\n{pazaryeri.NEREDE_YAZAR[platform]}")
+
+    with st.expander("⚙️ " + ("Kesintilerimi güncelle" if kayit else f"{platform} kesintilerimi gir")):
+        with st.form(f"pazaryeri_{platform}", border=False):
+            s1, s2, s3 = st.columns(3)
+            komisyon_g = s1.number_input("Komisyon (%)", min_value=0.0, max_value=99.0, step=0.5,
+                                         value=float(kayit["komisyon_yuzde"]) if kayit else 0.0,
+                                         key=f"pz_kom_{platform}")
+            sabit_g = s2.number_input("Sabit kesinti (TL)", min_value=0.0, step=1.0,
+                                      value=float(kayit["sabit_kesinti"]) if kayit else 0.0,
+                                      key=f"pz_sabit_{platform}",
+                                      help="Satış başına alınan hizmet/işlem bedeli varsa.")
+            kargo_g = s3.number_input("Kargo (TL)", min_value=0.0, step=5.0,
+                                      value=float(kayit["kargo"]) if kayit else 0.0,
+                                      key=f"pz_kargo_{platform}",
+                                      help="Kargoyu siz ödüyorsanız yazın; alıcı ödüyorsa 0.")
+            notlar_g = st.text_input("Not (isteğe bağlı)", value=kayit["notlar"] if kayit else "",
+                                     key=f"pz_not_{platform}",
+                                     placeholder="Örn. kadın girişimci oranı, el sanatları kategorisi")
+            if st.form_submit_button("💾 Bu pazaryerinin kesintilerini kaydet", use_container_width=True):
+                try:
+                    st.session_state.pazaryerleri = {
+                        **ayarlar, platform: pazaryeri.ayar_olustur(komisyon_g, sabit_g, kargo_g, notlar_g)}
+                except ValueError as hata:
+                    st.error(str(hata))
+                else:
+                    st.rerun()
+        st.caption(pazaryeri.NEREDE_YAZAR[platform])
+
+    if kayit:
+        return kayit["komisyon_yuzde"], kayit["sabit_kesinti"], kayit["kargo"]
+    return 0.0, 0.0, 0.0
+
+
 def _fiyat(b: Baglam) -> None:
     st.caption("Emeğinizi de sayan, komisyonu ve kargoyu içeren bir satış fiyatı hesaplayalım. "
                "Hesap yapay zekâ kullanmaz; formül açıktır.")
+    komisyon_kayitli, sabit_kesinti, kargo_kayitli = _pazaryeri_secimi()
+
     k1, k2 = st.columns(2)
     malzeme = k1.number_input("Malzeme (TL)", min_value=0.0, value=150.0, step=10.0, key="fy_malzeme")
     ambalaj = k2.number_input("Ambalaj (TL)", min_value=0.0, value=15.0, step=5.0, key="fy_ambalaj")
@@ -396,14 +454,16 @@ def _fiyat(b: Baglam) -> None:
     ucret = k2.number_input("Saatlik ücretiniz (TL)", min_value=0.0, value=100.0, step=10.0, key="fy_ucret",
                             help="Emeğinize biçtiğiniz saatlik ücret. Asgari ücretin saatlik karşılığını "
                                  "referans alabilirsiniz; karar sizin.")
-    kargo = k1.number_input("Kargo (TL) · alıcı ödüyorsa 0", min_value=0.0, value=0.0, step=5.0, key="fy_kargo")
-    komisyon = k2.number_input("Komisyon (%)", min_value=0.0, max_value=99.0, value=0.0, step=0.5,
-                               key="fy_komisyon",
-                               help="Satış platformu ve ödeme hizmeti oranlarının toplamı. Güncel oranı "
-                                    "kendi satıcı panelinizden ya da sözleşmenizden kontrol edin.")
+    kargo = k1.number_input("Kargo (TL) · alıcı ödüyorsa 0", min_value=0.0, value=float(kargo_kayitli),
+                            step=5.0, key="fy_kargo")
+    komisyon = k2.number_input("Komisyon (%)", min_value=0.0, max_value=99.0,
+                               value=float(komisyon_kayitli), step=0.5, key="fy_komisyon",
+                               help="Seçtiğiniz pazaryeri için kaydettiğiniz oran buraya gelir; "
+                                    "istediğinizde burada da değiştirebilirsiniz.")
     kar = st.slider("Kâr payı (%)", min_value=0, max_value=100, value=20, step=5, key="fy_kar")
     girdi = satis.FiyatGirdisi(malzeme=malzeme, emek_saat=emek, saat_ucreti=ucret, ambalaj=ambalaj,
-                               kargo=kargo, komisyon_yuzde=komisyon, kar_yuzde=kar)
+                               kargo=kargo, komisyon_yuzde=komisyon, sabit_kesinti=sabit_kesinti,
+                               kar_yuzde=kar)
     try:
         d = satis.fiyat_oner(girdi)
     except ValueError as hata:

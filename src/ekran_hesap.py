@@ -46,7 +46,7 @@ class Baglam:
 # ---------------------------------------------------------------------------
 def oturumu_baslat(k: hesap.Kullanici, hatirla: bool | None = None) -> None:
     """Kullanıcıyı ve verilerini oturuma alır. hatirla verilirse (giriş/kayıt) tarayıcıya oturum çerezi yazılır."""
-    icerikler, plan, uslup, satislar = hesap.verileri_yukle(k.id)
+    icerikler, plan, uslup, satislar, pazaryerleri = hesap.verileri_yukle(k.id)
     if hatirla is not None:
         try:
             jeton = hesap.oturum_ac(k.id, hatirla)
@@ -60,7 +60,8 @@ def oturumu_baslat(k: hesap.Kullanici, hatirla: bool | None = None) -> None:
     st.session_state.plan = plan
     st.session_state.uslup_ornekleri = uslup
     st.session_state.satislar = satislar
-    st.session_state.veri_ozeti = hesap.degisiklik_ozeti(icerikler, plan, uslup, satislar)
+    st.session_state.pazaryerleri = pazaryerleri
+    st.session_state.veri_ozeti = hesap.degisiklik_ozeti(icerikler, plan, uslup, satislar, pazaryerleri)
     st.session_state.giris_sonrasi = None
 
 
@@ -124,11 +125,12 @@ def kaydet_gerekirse() -> None:
         return
     gecmis, plan, uslup = st.session_state.gecmis, st.session_state.plan, st.session_state.uslup_ornekleri
     satislar = st.session_state.get("satislar", [])
-    ozet = hesap.degisiklik_ozeti(gecmis, plan, uslup, satislar)
+    pazaryerleri = st.session_state.get("pazaryerleri", {})
+    ozet = hesap.degisiklik_ozeti(gecmis, plan, uslup, satislar, pazaryerleri)
     if ozet == st.session_state.get("veri_ozeti"):
         return
     try:
-        hesap.verileri_kaydet(k["id"], hesap.belge(gecmis, plan, uslup, satislar))
+        hesap.verileri_kaydet(k["id"], hesap.belge(gecmis, plan, uslup, satislar, pazaryerleri))
         st.session_state.veri_ozeti = ozet
     except ValueError as hata:
         st.toast(str(hata), icon="⚠️")
@@ -232,7 +234,9 @@ def hesabim_ekrani(b: Baglam) -> None:
 
     st.download_button("⬇️ Verilerimi indir", hesap.belge(st.session_state.gecmis, st.session_state.plan,
                                                           st.session_state.uslup_ornekleri,
-                                                          st.session_state.get("satislar", [])).encode("utf-8"),
+                                                          st.session_state.get("satislar", []),
+                                                          st.session_state.get("pazaryerleri", {})
+                                                          ).encode("utf-8"),
                        file_name=f"uretken_kadin_verilerim_{takvim.simdi():%Y-%m-%d}.json",
                        mime="application/json", use_container_width=True, key="hesap_indir")
     st.caption("İndirdiğiniz dosyayı 🏠 Panom → Kaydet / yükle bölümünden geri yükleyebilirsiniz.")

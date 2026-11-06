@@ -1053,7 +1053,8 @@ def _plan_kaydet() -> None:
         "Ton profilimi de kaydet", value=True, key="kayit_uslup")
     veri = takvim.disa_aktar(st.session_state.gecmis, st.session_state.plan,
                              st.session_state.uslup_ornekleri if uslup_dahil else None,
-                             satislar=st.session_state.get("satislar", []))
+                             satislar=st.session_state.get("satislar", []),
+                             pazaryerleri=st.session_state.get("pazaryerleri", {}))
     st.download_button("💾  Planımı kaydet", data=veri.encode("utf-8"),
                        file_name=f"uretken_kadin_planim_{takvim.simdi():%Y-%m-%d}.json",
                        mime="application/json", use_container_width=True, key="kayit_indir")
@@ -1065,7 +1066,7 @@ def _plan_yukle() -> None:
     if dosya is not None and st.button("📂  Yükle", use_container_width=True,
                                        key="kayit_yukle"):
         try:
-            icerikler, plan, uslup, satislar, uyarilar = takvim.ice_aktar(dosya.getvalue())
+            icerikler, plan, uslup, satislar, pazaryerleri, uyarilar = takvim.ice_aktar(dosya.getvalue())
         except ValueError as e:
             st.error(str(e))
             return
@@ -1076,6 +1077,8 @@ def _plan_yukle() -> None:
         varolan = {s["id"] for s in st.session_state.get("satislar", [])}
         yeni_satislar = [s for s in satislar if s["id"] not in varolan]
         st.session_state.satislar = list(st.session_state.get("satislar", [])) + yeni_satislar
+        if pazaryerleri:
+            st.session_state.pazaryerleri = {**pazaryerleri, **st.session_state.get("pazaryerleri", {})}
         ek = f" {len(yeni_satislar)} satış kaydı." if yeni_satislar else ""
         st.session_state.pano_mesaj = " ".join(
             [f"Yüklendi: {n_icerik} içerik, {n_plan} paylaşım.{ek}"] + uyarilar)

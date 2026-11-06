@@ -168,7 +168,7 @@ def test_satis_defteri_kaydeder_ozetler_ve_siler():
 def test_satis_defteri_hesapta_saklanir():
     kayit = defter.yeni_satis("Keçe patik", 2, 300, 120, "Etsy", "2026-11-05")
     belge = hesap.belge([], [], None, [kayit])
-    _, _, _, geri = __import__("takvim").ice_aktar(belge)[:4]
+    geri = __import__("takvim").ice_aktar(belge)[3]
     assert geri[0]["urun"] == "Keçe patik" and defter.kar(geri[0]) == 360
 
 
@@ -276,6 +276,34 @@ def test_pazaryeri_ilani_eksik_bilgi_ve_cikarilan_etiketler():
     hatasiz(at)
     m = metinler(at)
     assert "Handmade felt baby booties" in m and "ölçü" in m and "organic cotton" in m
+
+
+def test_pazaryeri_kesintileri_kullanicidan_alinir_ve_saklanir():
+    at = uygulama("satis")
+    hatasiz(at)
+    assert any(w.key == "fy_platform" for w in at.pills)          # pazaryeri seçimi var
+    at.pills(key="fy_platform").set_value("Trendyol").run()
+    hatasiz(at)
+    metin = metinler(at)
+    assert "kesintilerinizi henüz girmediniz" in metin and "uydurmuyoruz" in metin
+    assert "Satıcı Paneli" in metin                                   # nerede yazdığını tarif eder
+    assert at.number_input(key="fy_komisyon").value == 0.0            # hazır oran yok
+
+    at.number_input(key="pz_kom_Trendyol").set_value(17.5)
+    at.number_input(key="pz_sabit_Trendyol").set_value(11.4)
+    next(b for b in at.button if "kesintilerini kaydet" in b.label).click().run()
+    hatasiz(at)
+    kayit = at.session_state["pazaryerleri"]["Trendyol"]
+    assert kayit["komisyon_yuzde"] == 17.5 and kayit["sabit_kesinti"] == 11.4
+    assert at.number_input(key="fy_komisyon").value == 17.5           # hesaba otomatik geldi
+    assert "Sizin girdiğiniz kesintiler" in metinler(at)
+
+
+def test_trendyol_kadin_kooperatifi_bilgisi_gosterilir():
+    at = uygulama("satis", fy_platform_secim="Trendyol")
+    hatasiz(at)
+    metin = metinler(at)
+    assert "Kadın Kooperatifi" in metin and "17 Şubat 2027" in metin
 
 
 def test_sesle_cevapla_sekmesi_riza_ister():
