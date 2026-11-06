@@ -147,6 +147,24 @@ def musteri_cevabi_uret(mesaj: str, urun_bilgisi: str = "", ton: str = "🌸 Sam
     return cevap
 
 
+def sesli_cevap_duzenle(ham_metin: str, ton: str = "🌸 Samimi", ozenli: bool = False,
+                        client=None) -> str:
+    """Sesle söylenip yazıya dökülmüş cevabı, gönderilebilir düzgün bir mesaja çevirir.
+
+    Bilgi eklemez: yalnızca konuşma dilini temizler, cümleleri düzeltir. Söylenmemiş ama gereken
+    bilgiler köşeli parantezle yer tutucu olarak kalır.
+    """
+    ham_metin = (ham_metin or "").strip()
+    if len(ham_metin) < 3:
+        raise ValueError("Önce sesinizi yazıya dökün.")
+    prompt = prompts.sesli_cevap(ham_metin[:3000], TONLAR.get(ton, "samimi ve sıcak"))
+    cevap = str(uret.json_coz(uret.metin_uret(prompt, ozenli=ozenli, json_yanit=True,
+                                              client=client)).get("cevap", "")).strip()
+    if not cevap:
+        raise ValueError("Cevap düzenlenemedi, tekrar deneyin.")
+    return cevap
+
+
 # ---------------------------------------------------------------------------
 # Pazaryeri ilanı ve çeviri
 # ---------------------------------------------------------------------------

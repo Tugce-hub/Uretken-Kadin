@@ -441,10 +441,60 @@ def _fiyat(b: Baglam) -> None:
             st.success(f"Kaydedildi: {adlar[kid]} · {gorsel.tl_metni(d.satis_fiyati)}")
 
 
+def _sesli_cevap(b: Baglam) -> None:
+    """Üretici cevabını konuşarak söyler; yazıya dökülür ve gönderilebilir hâle getirilir."""
+    st.caption("Cevabınızı söyleyin, yazıya dökelim. Yazmakla uğraşmadan, kendi cümlelerinizle.")
+    with st.expander("Verileriniz nasıl işlenir? (KVKK)"):
+        st.markdown(kvkk.SES_AYDINLATMA)
+    st.session_state.ses_rizasi = st.checkbox(kvkk.SES_RIZA_ETIKETI, value=st.session_state.ses_rizasi,
+                                              key="mc_ses_riza")
+    ses = st.audio_input("Mikrofona basın ve cevabınızı söyleyin", key="mc_ses")
+    if ses is not None and not st.session_state.ses_rizasi:
+        st.info("Devam etmek için yukarıdaki onay kutusunu işaretleyin.")
+        return
+
+    tonlar = list(satis.TONLAR)
+    ton = st.pills("Ton", tonlar, default=tonlar[0], key="mc_ses_ton",
+                   label_visibility="collapsed") or tonlar[0]
+    duzelt = st.checkbox("Cümlelerimi düzelt ve kibarlaştır", value=True, key="mc_ses_duzelt",
+                         help="Kapalıyken söyledikleriniz olduğu gibi yazıya dökülür.")
+    if ses is not None and st.session_state.ses_rizasi and st.button(
+            "🎙️ Sesimi cevaba çevir", type="primary", key="mc_ses_btn", use_container_width=True):
+        with st.spinner("Sesiniz yazıya dökülüyor…"):
+            try:
+                ham = uret.sesten_metne(ses.getvalue(), "audio/wav")
+            except Exception as hata:
+                _hata_goster(hata, "ses çevrilemedi")
+                return
+        if not ham:
+            st.warning("Ses anlaşılamadı, tekrar dener misiniz?")
+            return
+        if not duzelt:
+            st.session_state.mc_cevap = ham
+        else:
+            with st.spinner("Cevabınız düzenleniyor…"):
+                try:
+                    st.session_state.mc_cevap = satis.sesli_cevap_duzenle(ham, ton, ozenli=b.ozenli)
+                except Exception as hata:
+                    st.session_state.mc_cevap = ham
+                    _hata_goster(hata, "cevap düzenlenemedi; ham metin aşağıda")
+
+    if st.session_state.mc_cevap:
+        st.code(st.session_state.mc_cevap, language=None, wrap_lines=True)
+        doldur = satis.yer_tutucular(st.session_state.mc_cevap)
+        if doldur:
+            st.caption("Göndermeden önce doldurun: " + ", ".join(f"[{y}]" for y in doldur))
+        st.caption("Bu bir taslaktır; okuyup dilediğiniz gibi düzenleyerek gönderin.")
+
+
 def _musteri(b: Baglam) -> None:
-    mod = st.segmented_control("Cevap türü", ["📋 Hazır cevaplar", "🪄 Mesaja özel cevap"],
+    mod = st.segmented_control("Cevap türü",
+                               ["📋 Hazır cevaplar", "🪄 Mesaja özel cevap", "🎙️ Sesle cevapla"],
                                default="📋 Hazır cevaplar", key="mc_mod",
                                label_visibility="collapsed") or "📋 Hazır cevaplar"
+    if mod == "🎙️ Sesle cevapla":
+        _sesli_cevap(b)
+        return
     if mod == "📋 Hazır cevaplar":
         durumlar = list(satis.HAZIR_CEVAPLAR)
         durum = st.pills("Durum", durumlar, default=durumlar[0], key="mc_durum",

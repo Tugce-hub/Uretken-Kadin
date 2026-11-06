@@ -247,6 +247,17 @@ def test_pazaryeri_ilani_eksik_bilgi_ve_cikarilan_etiketler():
     assert "Handmade felt baby booties" in m and "ölçü" in m and "organic cotton" in m
 
 
+def test_sesle_cevapla_sekmesi_riza_ister():
+    at = uygulama("satis", satis_sekme=SATIS[1])
+    at.segmented_control(key="mc_mod").set_value("🎙️ Sesle cevapla").run()
+    hatasiz(at)
+    metin = metinler(at)
+    assert "Cevabınızı söyleyin" in metin and "açık rıza" in metin
+    assert any(c.key == "mc_ses_riza" for c in at.checkbox)
+    assert any(c.key == "mc_ses_duzelt" for c in at.checkbox)     # düzelt seçeneği varsayılan açık
+    assert at.checkbox(key="mc_ses_duzelt").value is True
+
+
 def test_ozel_gunler_kampanya_ve_takvime_ekleme():
     with yamala(satis, kampanya_onerisi_uret=lambda *a, **k: "**🎯 Kampanya fikri**\nDeneme önerisi"):
         at = uygulama("satis", satis_sekme=SATIS[3], gecmis=[kayit(1)])

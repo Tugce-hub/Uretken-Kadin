@@ -170,6 +170,17 @@ def test_kampanya_onerisi_prompt_kalan_gun_ve_kurallar():
     assert "10 gün kaldı" in prompt and "9 Mayıs 2027, Pazar" in prompt and "uydurma indirim" in prompt
 
 
+def test_sesli_cevap_duzenleme_bilgi_eklemez_ve_bos_metni_reddeder():
+    c = SahteIstemci({"cevap": "Merhaba, kolyeyi [kargo süresi] içinde gönderiyorum."})
+    ham = "ıı şey merhaba yani kolyeyi gönderiyorum işte"
+    cevap = satis.sesli_cevap_duzenle(ham, "👔 Resmi", client=c)
+    assert cevap.startswith("Merhaba") and satis.yer_tutucular(cevap) == ["kargo süresi"]
+    prompt = c.promptlar[0][0]
+    assert "EKLEME" in prompt and "kibar ve resmi" in prompt and ham in prompt
+    _hata_bekle(satis.sesli_cevap_duzenle, "  ", client=c)
+    _hata_bekle(satis.sesli_cevap_duzenle, ham, client=SahteIstemci({"cevap": ""}))
+
+
 if __name__ == "__main__":
     testler = [(ad, f) for ad, f in sorted(globals().items()) if ad.startswith("test_")]
     hatali = 0

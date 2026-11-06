@@ -506,6 +506,29 @@ Yalnızca şu JSON'u ver:
 {{"cevap": ""}}"""
 
 
+def sesli_cevap(ham_metin: str, ton: str) -> str:
+    return f"""{SISTEM_TALIMATI}
+
+Bu kez görevin farklı: üretici müşterisine vereceği cevabı SESLİ söyledi, biz de yazıya döktük.
+Elindeki metin konuşma dilinde; duraksamalar, tekrarlar ve yarım cümleler olabilir.
+Bu metni, müşteriye gönderilebilecek düzgün bir mesaja çevireceksin.
+
+Kurallar:
+- Üreticinin SÖYLEDİĞİ dışında hiçbir bilgi EKLEME. Fiyat, süre, stok, indirim uydurma.
+- Söylenmemiş ama gereken bir bilgi varsa köşeli parantezle yer tutucu bırak: [fiyat], [kargo süresi].
+- Anlamı değiştirme; yalnızca dolgu sözleri ("şey", "yani", "ııı") ve tekrarları temizle,
+  cümleleri düzgün kur, yazım ve noktalama hatalarını düzelt.
+- Üreticinin kendi ses tonu korunsun; {ton} bir dille yaz, en fazla 5 cümle.
+- Baskı kuran satış dili ("son şans", "hemen alın") kullanma; abartı ve ispatsız iddia ekleme.
+- Mesaja uygun düşüyorsa en fazla bir selamlama ve bir kapanış cümlesi olsun.
+
+ÜRETİCİNİN SESLİ CEVABI (yazıya dökülmüş hâli):
+\"\"\"{ham_metin}\"\"\"
+
+Yalnızca şu JSON'u ver:
+{{"cevap": ""}}"""
+
+
 def pazaryeri_ilani(anlatim: str, kategori: str, platform: str, dil: str,
                     anahtar_kelimeler: list[str] | None = None) -> str:
     if dil == "en":
